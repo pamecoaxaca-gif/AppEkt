@@ -1,169 +1,122 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Registro de Ventas</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f4f4f4;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .container {
-      background: white;
-      max-width: 500px;
-      margin: auto;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      background: #28a745;
-      color: white;
-      font-size: 16px;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #218838;
-    }
-    .msg {
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    .error {
-      color: red;
-    }
-    .ok {
-      color: green;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>App Elektra</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  #scanner, #scanner2 { width: 300px; margin: auto; }
+  .hidden { display: none; }
+</style>
 </head>
 <body>
 
-  <h1>Registro de Ventas</h1>
-  <div class="container">
-    
-    <!-- Código escaneado -->
-    <label>Código de producto</label>
-    <input type="text" id="codigoInput" placeholder="Escanea o escribe el código">
-    <button id="escanearBtn">📷 Escanear con cámara</button>
-    
-    <p><strong>Código detectado:</strong> <span id="codigoInvSpan"></span></p>
+<h2>Registro de Ventas</h2>
+<div id="scanner"></div>
+<video id="scanner2" class="hidden" autoplay></video>
+<p id="status">Esperando escaneo...</p>
 
-    <!-- Datos del producto -->
-    <label>Marca</label>
-    <input type="text" id="marcaInput" placeholder="Marca del producto">
-
-    <label>Modelo</label>
-    <input type="text" id="modeloInput" placeholder="Modelo del producto">
-
-    <label>Precio normal</label>
-    <input type="number" id="precioNormalInput" placeholder="Precio normal">
-
-    <label>Precio oferta</label>
-    <input type="number" id="precioOfertaInput" placeholder="Precio oferta">
-
-    <!-- Tipo de venta -->
-    <label>Tipo de venta</label>
-    <select id="tipoVenta">
-      <option value="contado">Contado</option>
-      <option value="credito">Crédito</option>
-    </select>
-
-    <button id="guardarProductoBtn">💾 Guardar producto</button>
-    <div id="msgProducto" class="msg"></div>
-  </div>
+<div id="form-nuevo" class="hidden">
+  <h3>Nuevo Producto</h3>
+  <label>Nombre: <input type="text" id="nombre"></label><br>
+  <label>Precio: <input type="number" id="precio"></label><br>
+  <button onclick="guardarProducto()">Guardar Producto</button>
+</div>
 
 <script>
-  const endpoint = "https://script.google.com/macros/s/AKfycbwFHG4NAgG1sCVlNDS0GNMmLlqAiZqhL6JPxfDxsIQVOlqGTG_Bh7_YnyD-xrgOcc4L/exec";
+const scriptURL = "AQUÍ_VA_TU_URL_DEL_APPS_SCRIPT"; // Pega tu URL de GAS
 
-  const codigoInput = document.getElementById("codigoInput");
-  const codigoInvSpan = document.getElementById("codigoInvSpan");
-  const marcaInput = document.getElementById("marcaInput");
-  const modeloInput = document.getElementById("modeloInput");
-  const precioNormalInput = document.getElementById("precioNormalInput");
-  const precioOfertaInput = document.getElementById("precioOfertaInput");
-  const tipoVenta = document.getElementById("tipoVenta");
-  const guardarProductoBtn = document.getElementById("guardarProductoBtn");
-  const msgProducto = document.getElementById("msgProducto");
-  const escanearBtn = document.getElementById("escanearBtn");
+let codigoActual = "";
 
-  // Mostrar código en el span
-  codigoInput.addEventListener("input", () => {
-    codigoInvSpan.textContent = codigoInput.value.trim();
-  });
-
-  // Aquí podrías integrar un lector QR (ej. html5-qrcode)
-  escanearBtn.addEventListener("click", () => {
-    alert("Función de escaneo con cámara por implementar.");
-  });
-
-  guardarProductoBtn.onclick = async () => {
-    const codigo = codigoInvSpan.textContent.trim();
-    if (!codigo) {
-      msgProducto.textContent = "No se ha escaneado ningún código.";
-      msgProducto.classList.add("error");
-      return;
-    }
-
-    const data = {
-      accion: "inventario",
-      product_id: codigo,
-      marca: marcaInput.value.trim(),
-      modelo: modeloInput.value.trim(),
-      precio_normal: precioNormalInput.value,
-      precio_oferta: precioOfertaInput.value,
-      tipo_venta: tipoVenta.value
-    };
-
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" }
+function iniciarEscaneoHtml5() {
+  const html5QrCode = new Html5Qrcode("scanner");
+  Html5Qrcode.getCameras().then(cameras => {
+    if (cameras.length) {
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        err => { console.warn("Error escaneo:", err); }
+      ).catch(() => {
+        document.getElementById("scanner").classList.add("hidden");
+        iniciarEscaneoQuagga();
       });
-      const json = await res.json();
-      if (json.status === "ok") {
-        msgProducto.textContent = `Producto ${json.mensaje}`;
-        msgProducto.classList.remove("error");
-        msgProducto.classList.add("ok");
-        // limpiar campos
-        codigoInput.value = "";
-        codigoInvSpan.textContent = "";
-        marcaInput.value = "";
-        modeloInput.value = "";
-        precioNormalInput.value = "";
-        precioOfertaInput.value = "";
-      } else {
-        msgProducto.textContent = `Error: ${json.message || "No se pudo guardar"}`;
-        msgProducto.classList.add("error");
-      }
-    } catch (err) {
-      msgProducto.textContent = "Error de conexión con el servidor.";
-      msgProducto.classList.add("error");
-      console.error(err);
+    } else {
+      iniciarEscaneoQuagga();
     }
-  };
-</script>
+  });
+}
 
+function iniciarEscaneoQuagga() {
+  const scanner2 = document.getElementById("scanner2");
+  scanner2.classList.remove("hidden");
+
+  Quagga.init({
+    inputStream: {
+      name: "Live",
+      type: "LiveStream",
+      target: scanner2
+    },
+    decoder: { readers: ["ean_reader", "code_128_reader", "qr_reader"] }
+  }, err => {
+    if (err) { console.error(err); return; }
+    Quagga.start();
+  });
+
+  Quagga.onDetected(data => {
+    onScanSuccess(data.codeResult.code);
+    Quagga.stop();
+  });
+}
+
+function onScanSuccess(decodedText) {
+  codigoActual = decodedText;
+  document.getElementById("status").innerText = "Código detectado: " + decodedText;
+  buscarProducto(decodedText);
+}
+
+function buscarProducto(codigo) {
+  fetch(scriptURL + "?action=buscar&codigo=" + encodeURIComponent(codigo))
+    .then(res => res.json())
+    .then(data => {
+      if (data.existe) {
+        let tipoPago = confirm("¿Venta a crédito? (Aceptar = Crédito, Cancelar = Contado)") ? "credito" : "contado";
+        registrarVenta(codigo, tipoPago);
+      } else {
+        document.getElementById("form-nuevo").classList.remove("hidden");
+      }
+    })
+    .catch(err => alert("Error en búsqueda: " + err));
+}
+
+function registrarVenta(codigo, tipo) {
+  fetch(scriptURL, {
+    method: "POST",
+    body: JSON.stringify({ action: "registrarVenta", codigo, tipo })
+  })
+    .then(res => res.text())
+    .then(txt => alert(txt))
+    .catch(err => alert("Error al registrar venta: " + err));
+}
+
+function guardarProducto() {
+  let nombre = document.getElementById("nombre").value;
+  let precio = document.getElementById("precio").value;
+  fetch(scriptURL, {
+    method: "POST",
+    body: JSON.stringify({ action: "guardarProducto", codigo: codigoActual, nombre, precio })
+  })
+    .then(res => res.text())
+    .then(txt => {
+      alert(txt);
+      document.getElementById("form-nuevo").classList.add("hidden");
+    })
+    .catch(err => alert("Error al guardar producto: " + err));
+}
+
+iniciarEscaneoHtml5();
+</script>
 </body>
 </html>
