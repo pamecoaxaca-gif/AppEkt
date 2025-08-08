@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Registro de Ventas</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -55,18 +56,24 @@
     .ok {
       color: green;
     }
+    #reader {
+      width: 100%;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
   <h1>Registro de Ventas</h1>
   <div class="container">
-    
+
     <!-- Código escaneado -->
     <label>Código de producto</label>
     <input type="text" id="codigoInput" placeholder="Escanea o escribe el código">
     <button id="escanearBtn">📷 Escanear con cámara</button>
-    
+
+    <div id="reader"></div>
+
     <p><strong>Código detectado:</strong> <span id="codigoInvSpan"></span></p>
 
     <!-- Datos del producto -->
@@ -112,9 +119,19 @@
     codigoInvSpan.textContent = codigoInput.value.trim();
   });
 
-  // Aquí podrías integrar un lector QR (ej. html5-qrcode)
+  // Configurar el escáner de código de barras
   escanearBtn.addEventListener("click", () => {
-    alert("Función de escaneo con cámara por implementar.");
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { qrbox: 250, fps: 5 });
+    html5QrcodeScanner.render(
+      (qrCodeData) => {
+        codigoInput.value = qrCodeData;
+        codigoInvSpan.textContent = qrCodeData;
+        html5QrcodeScanner.clear();
+      },
+      (error) => {
+        console.warn(error);
+      }
+    );
   });
 
   guardarProductoBtn.onclick = async () => {
