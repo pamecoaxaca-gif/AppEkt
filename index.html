@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Registro de Ventas</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -115,7 +115,7 @@
   </div>
 
 <script>
-  const endpoint = "https://script.google.com/macros/s/AKfycbzbqfoGc_Eo-asW-AQOvvJh-DQ6yj-wud0QY8mghEaVP048gqYFb9Q58h9zWISl-QPZ/exec"; // Reemplaza con tu endpoint real
+  const endpoint = "https://script.google.com/macros/s/AKfycbzaUWuLs__coCQRerszoD3X0iOgtiL1Wf9qD-3UznavrwVfVr4aHsYn2sgKXS1wGRvf/exec"; // Reemplaza con tu endpoint real
 
   const codigoInput = document.getElementById("codigoInput");
   const codigoInvSpan = document.getElementById("codigoInvSpan");
@@ -147,17 +147,33 @@
   });
 
   escanearBtn.addEventListener("click", () => {
-    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { qrbox: 250, fps: 5 });
-    html5QrcodeScanner.render(
-      (qrCodeData) => {
-        codigoInput.value = qrCodeData;
-        codigoInvSpan.textContent = qrCodeData;
-        html5QrcodeScanner.clear();
+    Quagga.init({
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: document.querySelector('#reader'),
+        constraints: {
+          width: 640,
+          height: 480,
+          facingMode: "environment" // Usa la cámara trasera
+        }
       },
-      (error) => {
-        console.warn(error);
+      decoder: {
+        readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader", "i2of5_reader"]
       }
-    );
+    }, function(err) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      Quagga.start();
+    });
+
+    Quagga.onDetected(function(data) {
+      codigoInput.value = data.codeResult.code;
+      codigoInvSpan.textContent = data.codeResult.code;
+      Quagga.stop();
+    });
   });
 
   guardarBtn.onclick = async () => {
