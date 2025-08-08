@@ -60,10 +60,23 @@
       width: 100%;
       margin-top: 10px;
     }
+    .menu {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .menu button {
+      width: auto;
+      padding: 10px 20px;
+    }
   </style>
 </head>
 <body>
   <h1>Registro de Ventas</h1>
+  <div class="menu">
+    <button id="ventaBtn">Registrar Venta</button>
+    <button id="inventarioBtn">Gestionar Inventario</button>
+  </div>
   <div class="container">
     <label>Código de producto</label>
     <input type="text" id="codigoInput" placeholder="Escanea o escribe el código">
@@ -72,7 +85,15 @@
     <p><strong>Código detectado:</strong> <span id="codigoInvSpan"></span></p>
 
     <label>Marca</label>
-    <input type="text" id="marcaInput" placeholder="Marca del producto">
+    <select id="marcaInput">
+      <option value="">Selecciona una marca</option>
+      <option value="Apple">Apple</option>
+      <option value="Motorola">Motorola</option>
+      <option value="Samsung">Samsung</option>
+      <option value="Vivo">Vivo</option>
+      <option value="Xiaomi">Xiaomi</option>
+      <option value="Otro">Otro</option>
+    </select>
 
     <label>Modelo</label>
     <input type="text" id="modeloInput" placeholder="Modelo del producto">
@@ -89,12 +110,12 @@
       <option value="credito">Crédito</option>
     </select>
 
-    <button id="guardarProductoBtn">💾 Guardar producto</button>
+    <button id="guardarBtn">Guardar</button>
     <div id="msgProducto" class="msg"></div>
   </div>
 
 <script>
-  const endpoint = "https://script.google.com/macros/s/AKfycbyhfTxWAz6VCnZtLyiCweNMPpnp2r-IwZf5-GhKlX4H-2Zx5Z346V_IAMk3ozrRuTct/exec"; // Reemplaza con tu endpoint real
+  const endpoint = "TU_ENDPOINT_DE_GOOGLE_APPS_SCRIPT"; // Reemplaza con tu endpoint real
 
   const codigoInput = document.getElementById("codigoInput");
   const codigoInvSpan = document.getElementById("codigoInvSpan");
@@ -103,9 +124,23 @@
   const precioNormalInput = document.getElementById("precioNormalInput");
   const precioOfertaInput = document.getElementById("precioOfertaInput");
   const tipoVenta = document.getElementById("tipoVenta");
-  const guardarProductoBtn = document.getElementById("guardarProductoBtn");
+  const guardarBtn = document.getElementById("guardarBtn");
   const msgProducto = document.getElementById("msgProducto");
   const escanearBtn = document.getElementById("escanearBtn");
+  const ventaBtn = document.getElementById("ventaBtn");
+  const inventarioBtn = document.getElementById("inventarioBtn");
+
+  let modo = 'venta'; // 'venta' o 'inventario'
+
+  ventaBtn.addEventListener("click", () => {
+    modo = 'venta';
+    alert("Modo Venta seleccionado");
+  });
+
+  inventarioBtn.addEventListener("click", () => {
+    modo = 'inventario';
+    alert("Modo Inventario seleccionado");
+  });
 
   codigoInput.addEventListener("input", () => {
     codigoInvSpan.textContent = codigoInput.value.trim();
@@ -125,7 +160,7 @@
     );
   });
 
-  guardarProductoBtn.onclick = async () => {
+  guardarBtn.onclick = async () => {
     const codigo = codigoInvSpan.textContent.trim();
     if (!codigo) {
       msgProducto.textContent = "No se ha escaneado ningún código.";
@@ -134,9 +169,9 @@
     }
 
     const data = {
-      accion: "inventario",
+      accion: modo,
       product_id: codigo,
-      marca: marcaInput.value.trim(),
+      marca: marcaInput.value,
       modelo: modeloInput.value.trim(),
       precio_normal: precioNormalInput.value,
       precio_oferta: precioOfertaInput.value,
@@ -151,9 +186,10 @@
       });
       const json = await res.json();
       if (json.status === "ok") {
-        msgProducto.textContent = `Producto ${json.mensaje}`;
+        msgProducto.textContent = modo === 'venta' ? `Venta registrada` : `Producto ${json.mensaje}`;
         msgProducto.classList.remove("error");
         msgProducto.classList.add("ok");
+        // Limpiar campos si es necesario
         codigoInput.value = "";
         codigoInvSpan.textContent = "";
         marcaInput.value = "";
@@ -161,7 +197,7 @@
         precioNormalInput.value = "";
         precioOfertaInput.value = "";
       } else {
-        msgProducto.textContent = `Error: ${json.message || "No se pudo guardar"}`;
+        msgProducto.textContent = `Error: ${json.message || "No se pudo completar la acción"}`;
         msgProducto.classList.add("error");
       }
     } catch (err) {
