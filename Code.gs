@@ -31,7 +31,7 @@ function crearActualizarProducto(producto) {
     throw new Error("Falta el código del producto (product_id). Datos recibidos: " + JSON.stringify(producto));
   }
 
-  var spreadsheetId = 'TU_ID_DE_LA_HOJA'; // Reemplaza con el ID de tu hoja de cálculo
+  var spreadsheetId = '1-g6CXuMlSHsF17MpeJ-BjQx2OcoYC-HJmam4NbPflGU'; // Reemplaza con el ID de tu hoja de cálculo
   var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
   var hoja = spreadsheet.getSheetByName("Productos");
 
