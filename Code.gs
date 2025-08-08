@@ -7,7 +7,7 @@ function doGet() {
 function buscarProducto(codigo) {
   var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Productos");
   if (!hoja) throw "No existe la hoja 'Productos'";
-  var datos = hoja.getRange(2, 1, hoja.getLastRow()-1, 5).getValues();
+  var datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 5).getValues();
   for (var i = 0; i < datos.length; i++) {
     if (String(datos[i][0]) === String(codigo)) {
       return {
@@ -23,24 +23,31 @@ function buscarProducto(codigo) {
 }
 
 function crearActualizarProducto(producto) {
+  if (!producto || !producto.product_id) {
+    throw new Error("Falta el código del producto (product_id). Datos recibidos: " + JSON.stringify(producto));
+  }
+
   var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Productos");
-  var datos = hoja.getRange(2, 1, hoja.getLastRow()-1, 5).getValues();
+  var datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 5).getValues();
   for (var i = 0; i < datos.length; i++) {
     if (String(datos[i][0]) === String(producto.product_id)) {
-      // Actualiza fila existente
-      hoja.getRange(i+2, 2, 1, 4).setValues([[producto.marca, producto.modelo, producto.precio_normal, producto.precio_oferta]]);
+      hoja.getRange(i + 2, 2, 1, 4).setValues([[producto.marca, producto.modelo, producto.precio_normal, producto.precio_oferta]]);
       return "actualizado";
     }
   }
-  // Si no existe, agrega fila nueva
   hoja.appendRow([producto.product_id, producto.marca, producto.modelo, producto.precio_normal, producto.precio_oferta]);
   return "creado";
 }
 
 function registrarVenta(producto, tipoVenta, precioVenta, vendedor) {
+  if (!producto || !producto.product_id) {
+    throw new Error("No se puede registrar venta: falta product_id.");
+  }
+
   var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
     tipoVenta === "credito" ? "Ventas_Credito" : "Ventas_Contado"
   );
+
   hoja.appendRow([
     new Date(),
     producto.product_id,
@@ -52,17 +59,19 @@ function registrarVenta(producto, tipoVenta, precioVenta, vendedor) {
 
 function doPost(e) {
   try {
-    var payload = JSON.parse(e.postData.contents);
-    var accion = payload.accion || "venta"; // puede ser "venta", "inventario" o "consulta"
+    var payload = JSON.parse(e.postData.contents || "{}");
+    Logger.log("Datos recibidos: " + JSON.stringify(payload));
+
+    var accion = payload.accion || "venta";
     var vendedor = payload.seller || "desconocido";
 
     if (accion === "consulta") {
       var producto = buscarProducto(payload.product_id);
       if (producto) {
-        return ContentService.createTextOutput(JSON.stringify({status:"ok", producto: producto}))
+        return ContentService.createTextOutput(JSON.stringify({ status: "ok", producto: producto }))
           .setMimeType(ContentService.MimeType.JSON);
       } else {
-        return ContentService.createTextOutput(JSON.stringify({status:"no_encontrado"}))
+        return ContentService.createTextOutput(JSON.stringify({ status: "no_encontrado" }))
           .setMimeType(ContentService.MimeType.JSON);
       }
     }
@@ -76,26 +85,31 @@ function doPost(e) {
         precio_oferta: parseFloat(payload.precio_oferta) || 0
       };
       var res = crearActualizarProducto(producto);
-      return ContentService.createTextOutput(JSON.stringify({status:"ok", mensaje: res})).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ status: "ok", mensaje: res }))
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
     // Acción venta
     var codigo = payload.product_id;
+    if (!codigo) throw new Error("Falta product_id para registrar venta.");
+
     var tipoVenta = payload.tipo_venta || "contado";
     var producto = buscarProducto(codigo);
 
     if (!producto) {
-      // Producto no encontrado, devolver para captura manual
-      return ContentService.createTextOutput(JSON.stringify({status:"no_encontrado"})).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ status: "no_encontrado" }))
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Decide precio a usar (oferta si existe y es >0)
     var precioVenta = producto.precio_oferta > 0 ? producto.precio_oferta : producto.precio_normal;
     registrarVenta(producto, tipoVenta, precioVenta, vendedor);
 
-    return ContentService.createTextOutput(JSON.stringify({status:"ok", producto: producto, precio_venta: precioVenta})).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", producto: producto, precio_venta: precioVenta }))
+      .setMimeType(ContentService.MimeType.JSON);
 
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({status:"error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    Logger.log("Error: " + err);
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
