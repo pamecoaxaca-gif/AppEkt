@@ -1,312 +1,169 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>App Elektra - Inventario y Ventas</title>
-
-<style>
-  /* Paleta colores pastel formales */
-  :root {
-    --color-fondo: #f9f8f7;
-    --color-principal: #4a6572;   /* azul grisáceo */
-    --color-secundario: #90a4ae;  /* gris azulado claro */
-    --color-acento: #7a9e9f;      /* azul verdoso */
-    --color-boton: #a8c0bf;       /* verde pastel */
-    --color-boton-hover: #89a9a8;
-    --color-texto: #344955;
-    --color-error: #d46a6a;
-    --color-borde: #cbd5db;
-  }
-
-  /* Reset básico */
-  * {
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--color-fondo);
-    color: var(--color-texto);
-    padding: 1.5rem;
-    max-width: 480px;
-    margin: 2rem auto;
-    user-select: none;
-  }
-  
-  h2 {
-    text-align: center;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: var(--color-principal);
-  }
-  
-  #tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  #tabs button {
-    flex: 1;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    background-color: var(--color-secundario);
-    color: var(--color-principal);
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
-  }
-  
-  #tabs button.active,
-  #tabs button:hover {
-    background-color: var(--color-acento);
-    color: #fff;
-    box-shadow: 0 4px 10px rgb(0 0 0 / 0.15);
-  }
-
-  video {
-    width: 100%;
-    border-radius: 12px;
-    border: 1.5px solid var(--color-borde);
-    background-color: #e3e8ec;
-    margin-bottom: 0.75rem;
-  }
-  
-  button {
-    width: 100%;
-    padding: 0.75rem;
-    border-radius: 8px;
-    border: none;
-    background-color: var(--color-boton);
-    color: var(--color-principal);
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-top: 0.5rem;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
-  }
-  
-  button:hover:not(:disabled) {
-    background-color: var(--color-boton-hover);
-  }
-  
-  button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  label {
-    display: block;
-    margin: 1rem 0 0.25rem 0;
-    font-weight: 600;
-  }
-  
-  input[type="text"],
-  input[type="number"],
-  select,
-  input[list] {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: 1.5px solid var(--color-borde);
-    transition: border-color 0.3s ease;
-  }
-  
-  input[type="text"]:focus,
-  input[type="number"]:focus,
-  select:focus,
-  input[list]:focus {
-    outline: none;
-    border-color: var(--color-acento);
-    box-shadow: 0 0 8px var(--color-acento);
-  }
-  
-  #formProducto, #formVentaManual {
-    background-color: #fff;
-    padding: 1rem 1.25rem;
-    border-radius: 12px;
-    box-shadow: 0 3px 10px rgb(0 0 0 / 0.08);
-    margin-top: 1rem;
-  }
-  
-  #inventario, #ventas {
-    display: none;
-  }
-  
-  #log, #logVentas {
-    background-color: #eaf0f2;
-    border-radius: 12px;
-    font-family: monospace;
-    font-size: 0.9rem;
-    height: 140px;
-    overflow-y: auto;
-    padding: 0.75rem;
-    margin-top: 1rem;
-    color: var(--color-principal);
-    user-select: text;
-    white-space: pre-wrap;
-  }
-
-  /* Mensaje error */
-  .error {
-    color: var(--color-error);
-    font-weight: 700;
-    margin-top: 0.25rem;
-  }
-</style>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro de Ventas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      background: white;
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .msg {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+    }
+    .ok {
+      color: green;
+    }
+  </style>
 </head>
 <body>
 
-<h2>App Elektra</h2>
+  <h1>Registro de Ventas</h1>
+  <div class="container">
+    
+    <!-- Código escaneado -->
+    <label>Código de producto</label>
+    <input type="text" id="codigoInput" placeholder="Escanea o escribe el código">
+    <button id="escanearBtn">📷 Escanear con cámara</button>
+    
+    <p><strong>Código detectado:</strong> <span id="codigoInvSpan"></span></p>
 
-<div id="tabs" role="tablist" aria-label="Seleccionar modo">
-  <button id="btnInventario" class="active" role="tab" aria-selected="true" aria-controls="inventario">Registro Inventario</button>
-  <button id="btnVentas" role="tab" aria-selected="false" aria-controls="ventas">Registro Ventas</button>
-</div>
+    <!-- Datos del producto -->
+    <label>Marca</label>
+    <input type="text" id="marcaInput" placeholder="Marca del producto">
 
-<!-- INVENTARIO -->
-<section id="inventario" role="tabpanel" aria-labelledby="btnInventario" style="display: block;">
-  <video id="videoInv" autoplay muted playsinline></video>
-  <div>
-    <button id="startInvBtn" type="button" aria-label="Iniciar cámara inventario">Iniciar Cámara</button>
-    <button id="stopInvBtn" type="button" disabled aria-label="Detener cámara inventario">Detener</button>
-  </div>
+    <label>Modelo</label>
+    <input type="text" id="modeloInput" placeholder="Modelo del producto">
 
-  <form id="formProducto" style="display:none;" aria-live="polite" aria-relevant="additions">
-    <h3>Producto</h3>
-    <label>Código:<br><strong><span id="codigoInv"></span></strong></label>
+    <label>Precio normal</label>
+    <input type="number" id="precioNormalInput" placeholder="Precio normal">
 
-    <label for="marca">Marca</label>
-    <input list="listaMarcas" id="marca" name="marca" placeholder="Selecciona o escribe..." autocomplete="off" />
+    <label>Precio oferta</label>
+    <input type="number" id="precioOfertaInput" placeholder="Precio oferta">
 
-    <datalist id="listaMarcas">
-      <option value="Apple"></option>
-      <option value="Motorola"></option>
-      <option value="Samsung"></option>
-      <option value="Oppo"></option>
-      <option value="Vivo"></option>
-      <option value="Zte"></option>
-      <option value="IB"></option>
-    </datalist>
-
-    <label for="modelo">Modelo</label>
-    <input type="text" id="modelo" name="modelo" autocomplete="off" />
-
-    <label for="precio_normal">Precio Normal</label>
-    <input type="number" id="precio_normal" name="precio_normal" step="0.01" min="0" />
-
-    <label for="precio_oferta">Precio Oferta</label>
-    <input type="number" id="precio_oferta" name="precio_oferta" step="0.01" min="0" />
-
-    <button type="button" id="guardarProductoBtn">Guardar Producto</button>
-    <p id="msgProducto" role="alert" aria-live="assertive"></p>
-  </form>
-</section>
-
-<!-- VENTAS -->
-<section id="ventas" role="tabpanel" aria-labelledby="btnVentas" aria-hidden="true">
-  <video id="videoVenta" autoplay muted playsinline></video>
-  <div>
-    <button id="startVentaBtn" type="button" aria-label="Iniciar cámara ventas">Iniciar Cámara</button>
-    <button id="stopVentaBtn" type="button" disabled aria-label="Detener cámara ventas">Detener</button>
-  </div>
-
-  <form id="formVentaManual" style="display:none;" aria-live="polite" aria-relevant="additions">
-    <h3>Producto no encontrado - Captura manual</h3>
-    <label>Código:<br><strong><span id="codigoVentaManual"></span></strong></label>
-
-    <label for="marcaVentaManual">Marca</label>
-    <input list="listaMarcasVentas" id="marcaVentaManual" name="marcaVentaManual" placeholder="Selecciona o escribe..." autocomplete="off" />
-    <datalist id="listaMarcasVentas">
-      <option value="Apple"></option>
-      <option value="Motorola"></option>
-      <option value="Samsung"></option>
-      <option value="Oppo"></option>
-      <option value="Vivo"></option>
-      <option value="Zte"></option>
-      <option value="IB"></option>
-    </datalist>
-
-    <label for="modeloVentaManual">Modelo</label>
-    <input type="text" id="modeloVentaManual" name="modeloVentaManual" autocomplete="off" />
-
-    <label for="precioVentaManual">Precio Normal</label>
-    <input type="number" id="precioVentaManual" name="precioVentaManual" step="0.01" min="0" />
-
-    <label for="precioOfertaVentaManual">Precio Oferta</label>
-    <input type="number" id="precioOfertaVentaManual" name="precioOfertaVentaManual" step="0.01" min="0" />
-
-    <label for="tipoVentaManual">Tipo de venta</label>
-    <select id="tipoVentaManual" name="tipoVentaManual" aria-label="Tipo de venta">
+    <!-- Tipo de venta -->
+    <label>Tipo de venta</label>
+    <select id="tipoVenta">
       <option value="contado">Contado</option>
       <option value="credito">Crédito</option>
     </select>
 
-    <label for="vendedorSelect">Vendedor</label>
-    <select id="vendedorSelect" name="vendedorSelect" aria-label="Seleccionar vendedor"></select>
-
-    <label for="nuevoVendedor">Agregar vendedor nuevo</label>
-    <input type="text" id="nuevoVendedor" name="nuevoVendedor" placeholder="Escribe nombre vendedor" autocomplete="off" />
-    <button type="button" id="agregarVendedorBtn">Agregar</button>
-
-    <button type="button" id="guardarVentaManualBtn">Guardar Venta y Producto</button>
-    <p id="msgVentaManual" role="alert" aria-live="assertive"></p>
-  </form>
-
-  <div id="logVentas" aria-live="polite" style="margin-top:1rem; font-family: monospace; font-size: 0.9rem; color: var(--color-principal); background: #eaf0f2; border-radius: 12px; padding: 0.75rem; height: 140px; overflow-y: auto; user-select: text; white-space: pre-wrap;"></div>
-</section>
+    <button id="guardarProductoBtn">💾 Guardar producto</button>
+    <div id="msgProducto" class="msg"></div>
+  </div>
 
 <script>
-  const endpoint = "https://script.google.com/macros/s/AKfycbwFHG4NAgG1sCVlNDS0GNMmLlqAiZqhL6JPxfDxsIQVOlqGTG_Bh7_YnyD-xrgOcc4L/exec; // REEMPLAZA esto con tu URL de Apps Script desplegado
+  const endpoint = "https://script.google.com/macros/s/AKfycbwFHG4NAgG1sCVlNDS0GNMmLlqAiZqhL6JPxfDxsIQVOlqGTG_Bh7_YnyD-xrgOcc4L/exec";
 
-  // Manejo Tabs y accesibilidad
-  const btnInventario = document.getElementById('btnInventario');
-  const btnVentas = document.getElementById('btnVentas');
-  const inventarioDiv = document.getElementById('inventario');
-  const ventasDiv = document.getElementById('ventas');
+  const codigoInput = document.getElementById("codigoInput");
+  const codigoInvSpan = document.getElementById("codigoInvSpan");
+  const marcaInput = document.getElementById("marcaInput");
+  const modeloInput = document.getElementById("modeloInput");
+  const precioNormalInput = document.getElementById("precioNormalInput");
+  const precioOfertaInput = document.getElementById("precioOfertaInput");
+  const tipoVenta = document.getElementById("tipoVenta");
+  const guardarProductoBtn = document.getElementById("guardarProductoBtn");
+  const msgProducto = document.getElementById("msgProducto");
+  const escanearBtn = document.getElementById("escanearBtn");
 
-  btnInventario.onclick = () => {
-    btnInventario.classList.add('active');
-    btnVentas.classList.remove('active');
-    inventarioDiv.style.display = 'block';
-    inventarioDiv.setAttribute('aria-hidden', 'false');
-    ventasDiv.style.display = 'none';
-    ventasDiv.setAttribute('aria-hidden', 'true');
-    clearLogs();
+  // Mostrar código en el span
+  codigoInput.addEventListener("input", () => {
+    codigoInvSpan.textContent = codigoInput.value.trim();
+  });
+
+  // Aquí podrías integrar un lector QR (ej. html5-qrcode)
+  escanearBtn.addEventListener("click", () => {
+    alert("Función de escaneo con cámara por implementar.");
+  });
+
+  guardarProductoBtn.onclick = async () => {
+    const codigo = codigoInvSpan.textContent.trim();
+    if (!codigo) {
+      msgProducto.textContent = "No se ha escaneado ningún código.";
+      msgProducto.classList.add("error");
+      return;
+    }
+
+    const data = {
+      accion: "inventario",
+      product_id: codigo,
+      marca: marcaInput.value.trim(),
+      modelo: modeloInput.value.trim(),
+      precio_normal: precioNormalInput.value,
+      precio_oferta: precioOfertaInput.value,
+      tipo_venta: tipoVenta.value
+    };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      });
+      const json = await res.json();
+      if (json.status === "ok") {
+        msgProducto.textContent = `Producto ${json.mensaje}`;
+        msgProducto.classList.remove("error");
+        msgProducto.classList.add("ok");
+        // limpiar campos
+        codigoInput.value = "";
+        codigoInvSpan.textContent = "";
+        marcaInput.value = "";
+        modeloInput.value = "";
+        precioNormalInput.value = "";
+        precioOfertaInput.value = "";
+      } else {
+        msgProducto.textContent = `Error: ${json.message || "No se pudo guardar"}`;
+        msgProducto.classList.add("error");
+      }
+    } catch (err) {
+      msgProducto.textContent = "Error de conexión con el servidor.";
+      msgProducto.classList.add("error");
+      console.error(err);
+    }
   };
+</script>
 
-  btnVentas.onclick = () => {
-    btnVentas.classList.add('active');
-    btnInventario.classList.remove('active');
-    ventasDiv.style.display = 'block';
-    ventasDiv.setAttribute('aria-hidden', 'false');
-    inventarioDiv.style.display = 'none';
-    inventarioDiv.setAttribute('aria-hidden', 'true');
-    clearLogs();
-  };
-
-  // Inicial: inventario visible
-  btnInventario.click();
-
-  // --------- INVENTARIO ---------
-  const videoInv = document.getElementById('videoInv');
-  const startInvBtn = document.getElementById('startInvBtn');
-  const stopInvBtn = document.getElementById('stopInvBtn');
-  const formProducto = document.getElementById('formProducto');
-  const codigoInvSpan = document.getElementById('codigoInv');
-  const marcaInput = document.getElementById('marca');
-  const modeloInput = document.getElementById('modelo');
-  const precioNormalInput = document.getElementById('precio_normal');
-  const precioOfertaInput = document.getElementById('precio_oferta');
-  const guardarProductoBtn = document.getElementById('guardarProductoBtn');
-  const msgProducto = document.getElementById('msgProducto');
-
-  let streamInv = null;
-  let scanningInv = false;
-  let codigo
+</body>
+</html>
