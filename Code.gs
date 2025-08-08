@@ -1,115 +1,122 @@
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('App Elektra - Inventario y Ventas')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>App Elektra</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  #scanner, #scanner2 { width: 300px; margin: auto; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<h2>Registro de Ventas</h2>
+<div id="scanner"></div>
+<video id="scanner2" class="hidden" autoplay></video>
+<p id="status">Esperando escaneo...</p>
+
+<div id="form-nuevo" class="hidden">
+  <h3>Nuevo Producto</h3>
+  <label>Nombre: <input type="text" id="nombre"></label><br>
+  <label>Precio: <input type="number" id="precio"></label><br>
+  <button onclick="guardarProducto()">Guardar Producto</button>
+</div>
+
+<script>
+const scriptURL = "AQUÍ_VA_TU_URL_DEL_APPS_SCRIPT"; // Pega tu URL de GAS
+
+let codigoActual = "";
+
+function iniciarEscaneoHtml5() {
+  const html5QrCode = new Html5Qrcode("scanner");
+  Html5Qrcode.getCameras().then(cameras => {
+    if (cameras.length) {
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        err => { console.warn("Error escaneo:", err); }
+      ).catch(() => {
+        document.getElementById("scanner").classList.add("hidden");
+        iniciarEscaneoQuagga();
+      });
+    } else {
+      iniciarEscaneoQuagga();
+    }
+  });
+}
+
+function iniciarEscaneoQuagga() {
+  const scanner2 = document.getElementById("scanner2");
+  scanner2.classList.remove("hidden");
+
+  Quagga.init({
+    inputStream: {
+      name: "Live",
+      type: "LiveStream",
+      target: scanner2
+    },
+    decoder: { readers: ["ean_reader", "code_128_reader", "qr_reader"] }
+  }, err => {
+    if (err) { console.error(err); return; }
+    Quagga.start();
+  });
+
+  Quagga.onDetected(data => {
+    onScanSuccess(data.codeResult.code);
+    Quagga.stop();
+  });
+}
+
+function onScanSuccess(decodedText) {
+  codigoActual = decodedText;
+  document.getElementById("status").innerText = "Código detectado: " + decodedText;
+  buscarProducto(decodedText);
 }
 
 function buscarProducto(codigo) {
-  var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Productos");
-  if (!hoja) throw "No existe la hoja 'Productos'";
-  var datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 5).getValues();
-  for (var i = 0; i < datos.length; i++) {
-    if (String(datos[i][0]) === String(codigo)) {
-      return {
-        product_id: datos[i][0],
-        marca: datos[i][1],
-        modelo: datos[i][2],
-        precio_normal: datos[i][3],
-        precio_oferta: datos[i][4]
-      };
-    }
-  }
-  return null;
-}
-
-function crearActualizarProducto(producto) {
-  if (!producto || !producto.product_id) {
-    throw new Error("Falta el código del producto (product_id). Datos recibidos: " + JSON.stringify(producto));
-  }
-
-  var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Productos");
-  var datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 5).getValues();
-  for (var i = 0; i < datos.length; i++) {
-    if (String(datos[i][0]) === String(producto.product_id)) {
-      hoja.getRange(i + 2, 2, 1, 4).setValues([[producto.marca, producto.modelo, producto.precio_normal, producto.precio_oferta]]);
-      return "actualizado";
-    }
-  }
-  hoja.appendRow([producto.product_id, producto.marca, producto.modelo, producto.precio_normal, producto.precio_oferta]);
-  return "creado";
-}
-
-function registrarVenta(producto, tipoVenta, precioVenta, vendedor) {
-  if (!producto || !producto.product_id) {
-    throw new Error("No se puede registrar venta: falta product_id.");
-  }
-
-  var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
-    tipoVenta === "credito" ? "Ventas_Credito" : "Ventas_Contado"
-  );
-
-  hoja.appendRow([
-    new Date(),
-    producto.product_id,
-    producto.modelo,
-    precioVenta,
-    vendedor
-  ]);
-}
-
-function doPost(e) {
-  try {
-    var payload = JSON.parse(e.postData.contents || "{}");
-    Logger.log("Datos recibidos: " + JSON.stringify(payload));
-
-    var accion = payload.accion || "venta";
-    var vendedor = payload.seller || "desconocido";
-
-    if (accion === "consulta") {
-      var producto = buscarProducto(payload.product_id);
-      if (producto) {
-        return ContentService.createTextOutput(JSON.stringify({ status: "ok", producto: producto }))
-          .setMimeType(ContentService.MimeType.JSON);
+  fetch(scriptURL + "?action=buscar&codigo=" + encodeURIComponent(codigo))
+    .then(res => res.json())
+    .then(data => {
+      if (data.existe) {
+        let tipoPago = confirm("¿Venta a crédito? (Aceptar = Crédito, Cancelar = Contado)") ? "credito" : "contado";
+        registrarVenta(codigo, tipoPago);
       } else {
-        return ContentService.createTextOutput(JSON.stringify({ status: "no_encontrado" }))
-          .setMimeType(ContentService.MimeType.JSON);
+        document.getElementById("form-nuevo").classList.remove("hidden");
       }
-    }
-
-    if (accion === "inventario") {
-      var producto = {
-        product_id: payload.product_id,
-        marca: payload.marca || "",
-        modelo: payload.modelo || "",
-        precio_normal: parseFloat(payload.precio_normal) || 0,
-        precio_oferta: parseFloat(payload.precio_oferta) || 0
-      };
-      var res = crearActualizarProducto(producto);
-      return ContentService.createTextOutput(JSON.stringify({ status: "ok", mensaje: res }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // Acción venta
-    var codigo = payload.product_id;
-    if (!codigo) throw new Error("Falta product_id para registrar venta.");
-
-    var tipoVenta = payload.tipo_venta || "contado";
-    var producto = buscarProducto(codigo);
-
-    if (!producto) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "no_encontrado" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    var precioVenta = producto.precio_oferta > 0 ? producto.precio_oferta : producto.precio_normal;
-    registrarVenta(producto, tipoVenta, precioVenta, vendedor);
-
-    return ContentService.createTextOutput(JSON.stringify({ status: "ok", producto: producto, precio_venta: precioVenta }))
-      .setMimeType(ContentService.MimeType.JSON);
-
-  } catch (err) {
-    Logger.log("Error: " + err);
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+    })
+    .catch(err => alert("Error en búsqueda: " + err));
 }
+
+function registrarVenta(codigo, tipo) {
+  fetch(scriptURL, {
+    method: "POST",
+    body: JSON.stringify({ action: "registrarVenta", codigo, tipo })
+  })
+    .then(res => res.text())
+    .then(txt => alert(txt))
+    .catch(err => alert("Error al registrar venta: " + err));
+}
+
+function guardarProducto() {
+  let nombre = document.getElementById("nombre").value;
+  let precio = document.getElementById("precio").value;
+  fetch(scriptURL, {
+    method: "POST",
+    body: JSON.stringify({ action: "guardarProducto", codigo: codigoActual, nombre, precio })
+  })
+    .then(res => res.text())
+    .then(txt => {
+      alert(txt);
+      document.getElementById("form-nuevo").classList.add("hidden");
+    })
+    .catch(err => alert("Error al guardar producto: " + err));
+}
+
+iniciarEscaneoHtml5();
+</script>
+</body>
+</html>
