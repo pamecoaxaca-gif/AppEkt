@@ -63,20 +63,14 @@
   </style>
 </head>
 <body>
-
   <h1>Registro de Ventas</h1>
   <div class="container">
-
-    <!-- Código escaneado -->
     <label>Código de producto</label>
     <input type="text" id="codigoInput" placeholder="Escanea o escribe el código">
     <button id="escanearBtn">📷 Escanear con cámara</button>
-
     <div id="reader"></div>
-
     <p><strong>Código detectado:</strong> <span id="codigoInvSpan"></span></p>
 
-    <!-- Datos del producto -->
     <label>Marca</label>
     <input type="text" id="marcaInput" placeholder="Marca del producto">
 
@@ -89,7 +83,6 @@
     <label>Precio oferta</label>
     <input type="number" id="precioOfertaInput" placeholder="Precio oferta">
 
-    <!-- Tipo de venta -->
     <label>Tipo de venta</label>
     <select id="tipoVenta">
       <option value="contado">Contado</option>
@@ -101,7 +94,7 @@
   </div>
 
 <script>
-  const endpoint = "https://script.google.com/macros/s/AKfycbwFHG4NAgG1sCVlNDS0GNMmLlqAiZqhL6JPxfDxsIQVOlqGTG_Bh7_YnyD-xrgOcc4L/exec";
+  const endpoint = "https://script.google.com/macros/s/AKfycbyhfTxWAz6VCnZtLyiCweNMPpnp2r-IwZf5-GhKlX4H-2Zx5Z346V_IAMk3ozrRuTct/exec"; // Reemplaza con tu endpoint real
 
   const codigoInput = document.getElementById("codigoInput");
   const codigoInvSpan = document.getElementById("codigoInvSpan");
@@ -114,12 +107,10 @@
   const msgProducto = document.getElementById("msgProducto");
   const escanearBtn = document.getElementById("escanearBtn");
 
-  // Mostrar código en el span
   codigoInput.addEventListener("input", () => {
     codigoInvSpan.textContent = codigoInput.value.trim();
   });
 
-  // Configurar el escáner de código de barras
   escanearBtn.addEventListener("click", () => {
     const html5QrcodeScanner = new Html5QrcodeScanner("reader", { qrbox: 250, fps: 5 });
     html5QrcodeScanner.render(
@@ -163,7 +154,6 @@
         msgProducto.textContent = `Producto ${json.mensaje}`;
         msgProducto.classList.remove("error");
         msgProducto.classList.add("ok");
-        // limpiar campos
         codigoInput.value = "";
         codigoInvSpan.textContent = "";
         marcaInput.value = "";
@@ -181,6 +171,5 @@
     }
   };
 </script>
-
 </body>
 </html>
