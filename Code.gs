@@ -3,6 +3,7 @@ function doGet() {
     .setTitle('App Elektra - Inventario y Ventas')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
+
 function buscarProducto(codigo) {
   var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Productos");
   if (!hoja) throw "No existe la hoja 'Productos'";
@@ -97,10 +98,4 @@ function doPost(e) {
   } catch(err) {
     return ContentService.createTextOutput(JSON.stringify({status:"error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('App Elektra - Inventario y Ventas')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
