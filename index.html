@@ -115,7 +115,8 @@
   </div>
 
 <script>
-  const endpoint = "https://script.google.com/macros/s/AKfycbzgMx1u3-QzvNnoggD_cWMgan8I6slVXR-EP9bTTuQ8TzHVmAVXzZRqKd5I2_zfpBRj/exec"; // Reemplaza con tu endpoint real
+  // No necesitas el endpoint ya que usaremos google.script.run
+  // const endpoint = "https://script.google.com/macros/s/AKfycbzgMx1u3-QzvNnoggD_cWMgan8I6slVXR-EP9bTTuQ8TzHVmAVXzZRqKd5I2_zfpBRj/exec";
 
   const codigoInput = document.getElementById("codigoInput");
   const codigoInvSpan = document.getElementById("codigoInvSpan");
@@ -176,14 +177,14 @@
     });
   });
 
-  guardarBtn.onclick = async () => {
+  guardarBtn.onclick = () => {
     const codigo = codigoInvSpan.textContent.trim();
     if (!codigo) {
       msgProducto.textContent = "No se ha escaneado ningún código.";
       msgProducto.classList.add("error");
       return;
     }
-
+    
     const data = {
       accion: modo,
       product_id: codigo,
@@ -193,34 +194,39 @@
       precio_oferta: precioOfertaInput.value,
       tipo_venta: tipoVenta.value
     };
-
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" }
-      });
-      const json = await res.json();
-      if (json.status === "ok") {
-        msgProducto.textContent = modo === 'venta' ? `Venta registrada` : `Producto ${json.mensaje}`;
-        msgProducto.classList.remove("error");
-        msgProducto.classList.add("ok");
-        // Limpiar campos si es necesario
-        codigoInput.value = "";
-        codigoInvSpan.textContent = "";
-        marcaInput.value = "";
-        modeloInput.value = "";
-        precioNormalInput.value = "";
-        precioOfertaInput.value = "";
-      } else {
-        msgProducto.textContent = `Error: ${json.message || "No se pudo completar la acción"}`;
+    
+    // Muestra el mensaje de espera
+    msgProducto.textContent = "Procesando...";
+    msgProducto.classList.remove("error", "ok");
+    
+    // Llamada a la función del servidor 'doPost'
+    google.script.run
+      .withSuccessHandler(json => {
+        // La respuesta del servidor ya viene parseada en 'json'
+        if (json.status === "ok") {
+          msgProducto.textContent = modo === 'venta' ? `Venta registrada` : `Producto ${json.mensaje}`;
+          msgProducto.classList.remove("error");
+          msgProducto.classList.add("ok");
+          // Limpiar campos
+          codigoInput.value = "";
+          codigoInvSpan.textContent = "";
+          marcaInput.value = "";
+          modeloInput.value = "";
+          precioNormalInput.value = "";
+          precioOfertaInput.value = "";
+        } else {
+          msgProducto.textContent = `Error: ${json.message || "No se pudo completar la acción"}`;
+          msgProducto.classList.add("error");
+          msgProducto.classList.remove("ok");
+        }
+      })
+      .withFailureHandler(err => {
+        msgProducto.textContent = `Error de servidor: ${err.message}`;
         msgProducto.classList.add("error");
-      }
-    } catch (err) {
-      msgProducto.textContent = "Error de conexión con el servidor.";
-      msgProducto.classList.add("error");
-      console.error(err);
-    }
+        msgProducto.classList.remove("ok");
+        console.error(err);
+      })
+      .doPost({ postData: { contents: JSON.stringify(data) } });
   };
 </script>
 </body>
