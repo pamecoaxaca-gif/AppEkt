@@ -109,15 +109,20 @@
       <option value="contado">Contado</option>
       <option value="credito">Crédito</option>
     </select>
+    
+    <label>Vendedor</label>
+    <select id="vendedorInput">
+      <option value="">Selecciona un vendedor</option>
+      <option value="Isaac">Isaac</option>
+      <option value="Zara">Zara</option>
+      <option value="Otro">Otro</option>
+    </select>
 
     <button id="guardarBtn">Guardar</button>
     <div id="msgProducto" class="msg"></div>
   </div>
 
 <script>
-  // No necesitas el endpoint ya que usaremos google.script.run
-  // const endpoint = "https://script.google.com/macros/s/AKfycbzgMx1u3-QzvNnoggD_cWMgan8I6slVXR-EP9bTTuQ8TzHVmAVXzZRqKd5I2_zfpBRj/exec";
-
   const codigoInput = document.getElementById("codigoInput");
   const codigoInvSpan = document.getElementById("codigoInvSpan");
   const marcaInput = document.getElementById("marcaInput");
@@ -125,13 +130,14 @@
   const precioNormalInput = document.getElementById("precioNormalInput");
   const precioOfertaInput = document.getElementById("precioOfertaInput");
   const tipoVenta = document.getElementById("tipoVenta");
+  const vendedorInput = document.getElementById("vendedorInput"); // Se agregó el nuevo campo
   const guardarBtn = document.getElementById("guardarBtn");
   const msgProducto = document.getElementById("msgProducto");
   const escanearBtn = document.getElementById("escanearBtn");
   const ventaBtn = document.getElementById("ventaBtn");
   const inventarioBtn = document.getElementById("inventarioBtn");
 
-  let modo = 'venta'; // 'venta' o 'inventario'
+  let modo = 'venta';
 
   ventaBtn.addEventListener("click", () => {
     modo = 'venta';
@@ -156,7 +162,7 @@
         constraints: {
           width: 640,
           height: 480,
-          facingMode: "environment" // Usa la cámara trasera
+          facingMode: "environment"
         }
       },
       decoder: {
@@ -185,6 +191,7 @@
       return;
     }
     
+    // Se agregan los datos del vendedor al objeto
     const data = {
       accion: modo,
       product_id: codigo,
@@ -192,28 +199,26 @@
       modelo: modeloInput.value.trim(),
       precio_normal: precioNormalInput.value,
       precio_oferta: precioOfertaInput.value,
-      tipo_venta: tipoVenta.value
+      tipo_venta: tipoVenta.value,
+      seller: vendedorInput.value.trim() // <-- Se agregó esta línea
     };
     
-    // Muestra el mensaje de espera
     msgProducto.textContent = "Procesando...";
     msgProducto.classList.remove("error", "ok");
     
-    // Llamada a la función del servidor 'doPost'
     google.script.run
       .withSuccessHandler(json => {
-        // La respuesta del servidor ya viene parseada en 'json'
         if (json.status === "ok") {
           msgProducto.textContent = modo === 'venta' ? `Venta registrada` : `Producto ${json.mensaje}`;
           msgProducto.classList.remove("error");
           msgProducto.classList.add("ok");
-          // Limpiar campos
           codigoInput.value = "";
           codigoInvSpan.textContent = "";
           marcaInput.value = "";
           modeloInput.value = "";
           precioNormalInput.value = "";
           precioOfertaInput.value = "";
+          vendedorInput.value = ""; // Se limpia el campo del vendedor
         } else {
           msgProducto.textContent = `Error: ${json.message || "No se pudo completar la acción"}`;
           msgProducto.classList.add("error");
